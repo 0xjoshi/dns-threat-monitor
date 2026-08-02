@@ -1,219 +1,459 @@
 # 📡 DNS & HTTP Threat Monitoring Tool
 
-> A lightweight, real-time cybersecurity tool for SOC analysts and security enthusiasts.  
-> Monitors DNS queries and HTTP requests, classifies threats, and logs everything to CSV.
+![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)
+![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-green)
+![License](https://img.shields.io/badge/License-MIT-yellow.svg)
+![Status](https://img.shields.io/badge/Status-Active-success)
+
+A lightweight, real-time cybersecurity tool that monitors DNS queries and HTTP URLs, detects suspicious activity using rule-based threat analysis, and logs security events for SOC monitoring and incident analysis.
 
 ---
 
-## 🧠 Overview
+# 🎯 Project Objective
 
-This tool captures live DNS traffic using **Scapy**, analyzes domains with a **multi-rule detection engine** (keyword matching + Shannon entropy + pattern rules), and flags suspicious activity as **LOW / MEDIUM / HIGH** risk. It also includes an HTTP URL scanner that checks URLs for phishing indicators, bad SSL, and suspicious redirects.
+DNS is one of the most commonly abused protocols in cyber attacks such as phishing, malware command-and-control (C2), Domain Generation Algorithm (DGA) communication, and data exfiltration.
 
----
+This project simulates how a Security Operations Center (SOC) analyst monitors network traffic, identifies suspicious domains using multiple detection techniques, classifies threats, and records events for investigation.
 
-## 🚀 Features
+This tool was built for:
 
-| Feature | Details |
-|---|---|
-| 🔍 Real-time DNS capture | Uses Scapy to sniff UDP port 53 packets |
-| 🧠 Multi-rule detection | Keyword blacklist + entropy (DGA) + digit sequences + hyphens |
-| 🌐 HTTP URL scanner | Checks URLs for risk, SSL errors, redirects, and bad domains |
-| 📊 CSV logging | Every event logged with timestamp, type, domain, risk, reason |
-| 🎨 Color-coded console | GREEN / YELLOW / RED for instant visual triage |
-| ⚙️ Config-driven | All thresholds and paths in one config file |
-| 🧵 Threaded mode | Run DNS sniffer + HTTP scanner simultaneously |
+- SOC Analyst practice
+- Blue Team learning
+- Cybersecurity portfolio
+- Network traffic analysis
+- CTF practice
 
 ---
 
-## 📂 Project Structure
+# 🏗 Project Architecture
+
+```
+                +------------------------+
+                |   Network Traffic      |
+                +-----------+------------+
+                            |
+                            |
+                   DNS / HTTP Requests
+                            |
+             +--------------+--------------+
+             |                             |
+             | DNS Packet Sniffer (Scapy)  |
+             | HTTP URL Scanner            |
+             +--------------+--------------+
+                            |
+                    Detection Engine
+                            |
+      +-----------+---------+----------+-----------+
+      |           |                    |           |
+ Blacklist    Whitelist          Entropy      Pattern Rules
+  Matching      Check            Detection
+      |                               |
+      +---------------+---------------+
+                      |
+               Risk Classification
+          LOW / MEDIUM / HIGH
+                      |
+      +---------------+----------------+
+      |                                |
+ Console Output                  CSV Logging
+```
+
+---
+
+# 🚀 Features
+
+| Feature | Description |
+|----------|-------------|
+| 🔍 Real-time DNS Monitoring | Live DNS packet capture using Scapy |
+| 🌐 HTTP URL Scanner | Scan URLs for phishing indicators |
+| 🛡 Whitelist Support | Ignore trusted domains automatically |
+| 🚫 Blacklist Detection | Detect suspicious keywords |
+| 🧠 Shannon Entropy Analysis | Detect possible DGA domains |
+| 🔢 Digit Pattern Detection | Identify suspicious numeric domains |
+| ➖ Hyphen Detection | Detect phishing-style domains |
+| 📊 CSV Logging | Save every event for later analysis |
+| 🎨 Color Console | Easy-to-read LOW/MEDIUM/HIGH alerts |
+| ⚙ Configurable | Modify thresholds from one config file |
+| 🧵 Multi-threaded | DNS monitoring and HTTP scanning together |
+
+---
+
+# 📂 Project Structure
 
 ```
 dns-threat-monitor/
+
 │
 ├── app/
-│   ├── __init__.py
-│   ├── main.py          # Orchestrator + menu
-│   ├── dns_sniffer.py   # Scapy DNS packet capture
-│   ├── http_monitor.py  # HTTP URL risk checker
-│   ├── detector.py      # Rule-based + entropy detection engine
-│   ├── logger.py        # CSV event logger
-│   └── config.py        # All settings & constants
-│
-├── utils/
-│   ├── __init__.py
-│   └── helpers.py       # Summary reports & log utilities
+│   ├── main.py
+│   ├── dns_sniffer.py
+│   ├── http_monitor.py
+│   ├── detector.py
+│   ├── logger.py
+│   └── config.py
 │
 ├── data/
-│   └── blacklist.txt    # Suspicious keywords (editable)
+│   ├── blacklist.txt
+│   └── whitelist.txt
 │
 ├── logs/
-│   └── traffic_logs.csv # Auto-created on first run
+│   └── traffic_logs.csv
 │
-├── run.py               # Entry point
+├── utils/
+│   └── helpers.py
+│
+├── screenshots/
+│
+├── run.py
 ├── requirements.txt
 └── README.md
 ```
 
 ---
 
-## ⚙️ Installation & Setup
+# ⚙ Installation
 
-### 1. Clone the repo
+Clone repository
+
 ```bash
 git clone https://github.com/YOUR_USERNAME/dns-threat-monitor.git
+
 cd dns-threat-monitor
 ```
 
-### 2. Install dependencies
+Install dependencies
+
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Run the tool
+---
 
-**Linux / macOS** (DNS sniffing needs root):
+# ▶ Running
+
+### Windows
+
+Run Command Prompt as Administrator
+
 ```bash
-sudo python run.py
-```
-
-**Windows** (run as Administrator):
-```cmd
 python run.py
 ```
 
----
+### Linux
 
-## 🖥️ Usage
-
-When you run the tool, you'll see an interactive menu:
-
-```
-Select monitoring mode:
-  [1] DNS Sniffer only  (requires root/admin)
-  [2] HTTP URL Scanner only
-  [3] Both (DNS + HTTP)
-  [4] Exit
-```
-
-### Mode 2 — HTTP Scanner example
-```
-Enter URLs to scan (comma-separated):
-  URLs: http://secure-login-bank.xyz, https://google.com
-
-[HTTP] http://secure-login-bank.xyz | status=200 | risk=HIGH | blacklisted keyword: 'secure'; non-HTTPS
-[HTTP] https://google.com           | status=200 | risk=LOW  | no suspicious indicators
-```
-
-### Mode 1 — DNS Sniffer example (live output)
-```
-[DNS] xn--randomdga8271.ru  | src=192.168.1.5 | risk=HIGH   | high entropy (4.1) — possible DGA
-[DNS] login-verify-bank.com  | src=192.168.1.5 | risk=HIGH   | blacklisted keyword: 'login'
-[DNS] google.com             | src=192.168.1.5 | risk=LOW    | no suspicious indicators
+```bash
+sudo python3 run.py
 ```
 
 ---
 
-## 🔥 Detection Engine Rules
+# 🖥 Menu
+
+```
+Select monitoring mode
+
+1. DNS Sniffer only
+
+2. HTTP URL Scanner
+
+3. Both (DNS + HTTP)
+
+4. Exit
+```
+
+---
+
+# 🔍 Detection Workflow
+
+```
+DNS Request
+      │
+      ▼
+
+Normalize Domain
+
+      │
+      ▼
+
+Whitelist Check
+
+      │
+      ▼
+
+Blacklist Check
+
+      │
+      ▼
+
+Entropy Analysis
+
+      │
+      ▼
+
+Pattern Matching
+
+      │
+      ▼
+
+Risk Classification
+
+      │
+      ▼
+
+CSV Logger + Console Output
+```
+
+---
+
+# 🔥 Detection Rules
 
 | Rule | Condition | Risk |
-|---|---|---|
-| Blacklist keyword | Domain contains login, bank, verify… | MEDIUM |
-| Long domain | > 25 characters | HIGH |
-| Digit sequence | 3+ consecutive numbers | HIGH |
-| High entropy | Shannon entropy ≥ 3.8 (DGA indicator) | HIGH |
-| Excessive hyphens | 3+ hyphens in domain | MEDIUM |
-| HTTP (not HTTPS) | URL starts with `http://` | MEDIUM |
-| SSL error | Certificate invalid/expired | HIGH |
+|------|-----------|------|
+| Blacklisted Keyword | login, verify, secure, bank | MEDIUM |
+| Long Domain | >25 characters | HIGH |
+| Digit Sequence | 3 or more digits | HIGH |
+| High Entropy | ≥3.8 | HIGH |
+| Excessive Hyphens | 3 or more | MEDIUM |
+| HTTP URL | Non HTTPS | MEDIUM |
+| SSL Error | Invalid certificate | HIGH |
 
 ---
 
-## 📊 Log Output
+# 📊 Sample Output
 
-All events are saved to `logs/traffic_logs.csv`:
+DNS Monitoring
 
 ```
-Timestamp,Type,Domain/URL,Risk,Details
-2025-07-10 14:32:01,DNS,login-secure.xyz,HIGH,src=192.168.1.1; blacklisted keyword: 'login'
-2025-07-10 14:32:05,HTTP,http://verify-bank.tk,HIGH,status=200; blacklisted keyword: 'verify'
+[DNS]
+
+google.com
+
+Risk : LOW
+
+Reason : Trusted Domain
 ```
 
----
+```
+[DNS]
 
-## 🛠️ Configuration
+login-bank-security.xyz
 
-Edit `app/config.py` to tune thresholds:
+Risk : HIGH
 
-```python
-DOMAIN_LEN_THRESHOLD  = 25     # chars before HIGH risk
-ENTROPY_THRESHOLD     = 3.8    # Shannon entropy cutoff
-NUMBER_SEQ_THRESHOLD  = 3      # consecutive digits cutoff
+Reason
+
+• Blacklisted keyword
+
+• High entropy
+
+• Possible phishing
 ```
 
-Edit `data/blacklist.txt` to add your own suspicious keywords (one per line).
+HTTP Scanner
 
----
-
-## 📈 View Summary Report
-
-Open a Python shell in the project root:
-
-```python
-from utils.helpers import print_summary
-print_summary()
 ```
+[HTTP]
 
-Output:
-```
-=============================================
-  THREAT SUMMARY  (47 events logged)
-=============================================
-  HIGH   : 12
-  MEDIUM : 18
-  LOW    : 17
-=============================================
+http://verify-bank.xyz
 
-Top HIGH-risk targets:
-  1. xn--dga8271random.ru (4x)
-  2. login-secure-bank.xyz (3x)
+Risk : HIGH
+
+Reason
+
+• Non HTTPS
+
+• Blacklisted keyword
+
+• Suspicious URL
 ```
 
 ---
 
-## 🔧 Tech Stack
+# 📈 Threat Summary
 
-- **Python 3.8+**
-- **Scapy** — raw DNS packet capture
-- **Requests** — HTTP probing
-- **csv / os / threading** — stdlib only (no heavy dependencies)
+```
+=====================================
 
----
+THREAT SUMMARY
 
-## 🎯 Use Cases
+=====================================
 
-- SOC monitoring simulation & practice
-- Blue team threat detection training
-- Network traffic analysis for CTF
-- Cybersecurity portfolio project
+HIGH     12
 
----
+MEDIUM   17
 
-## 🔮 Planned Upgrades
+LOW      51
 
-- [ ] Flask web dashboard with live feed
-- [ ] VirusTotal API integration
-- [ ] WHOIS lookup on suspicious domains
-- [ ] Email/Slack alerting for HIGH-risk events
-- [ ] Integration with IDS/IPS system
+=====================================
+
+Top High Risk Domains
+
+login-bank.xyz
+
+random8271.ru
+```
 
 ---
 
-## 👨‍💻 Author
+# 📂 Logs
 
-Cybersecurity Enthusiast — Blue Team / SOC Focus  
-Built as a hands-on SOC simulation project.
+All events are stored in
+
+```
+logs/traffic_logs.csv
+```
+
+Example
+
+```
+Timestamp,Type,Target,Risk,Reason
+
+2026-07-12,DNS,google.com,LOW,Trusted Domain
+
+2026-07-12,DNS,login-bank.xyz,HIGH,Blacklisted Keyword
+
+2026-07-12,HTTP,http://bank-login.xyz,HIGH,Non HTTPS
+```
 
 ---
 
-## 📜 License
+# ⚙ Configuration
 
-MIT License — free to use and modify.
+Modify
+
+```
+app/config.py
+```
+
+```
+DOMAIN_LEN_THRESHOLD = 25
+
+ENTROPY_THRESHOLD = 3.8
+
+NUMBER_SEQ_THRESHOLD = 3
+```
+
+Customize
+
+```
+data/blacklist.txt
+```
+
+and
+
+```
+data/whitelist.txt
+```
+
+without changing any source code.
+
+---
+
+# 🛠 Technologies Used
+
+- Python
+- Scapy
+- Requests
+- CSV
+- Threading
+- Regex
+- Shannon Entropy
+- Network Packet Analysis
+
+---
+
+# 🛡 Skills Demonstrated
+
+- Network Security
+- DNS Analysis
+- HTTP Security
+- Packet Capture
+- Threat Detection
+- SOC Monitoring
+- Threat Hunting
+- Python Programming
+- Multithreading
+- Log Analysis
+- Cybersecurity Automation
+
+---
+
+# 📷 Screenshots
+
+Add screenshots here.
+
+```
+screenshots/
+
+menu.png
+
+dns-monitor.png
+
+http-scanner.png
+```
+
+---
+
+# 🚀 Roadmap
+
+## Version 1.0
+
+- DNS Monitoring
+- HTTP Scanner
+- CSV Logging
+
+## Version 2.0
+
+- Interactive Console
+- Better Detection Engine
+- Weighted Risk Scoring
+- Improved Whitelist
+
+## Version 3.0
+
+- Flask Dashboard
+- Live Charts
+- Search Logs
+- Statistics
+
+## Version 4.0
+
+- VirusTotal Integration
+- WHOIS Lookup
+- AbuseIPDB
+- GeoIP
+- Email Alerts
+- Slack Alerts
+- REST API
+
+---
+
+# ⚠ Disclaimer
+
+This project is intended for educational purposes, cybersecurity training, and defensive security research only.
+
+Only use it on networks that you own or have permission to monitor.
+
+---
+
+# 👨‍💻 Author
+
+**Yogesh Joshi**
+
+Cybersecurity Enthusiast
+
+SOC Analyst | Blue Team | Python | Network Security
+
+GitHub: https://github.com/0xjoshi
+
+---
+
+# ⭐ Support
+
+If you found this project useful, consider giving it a ⭐ on GitHub.
+
+---
+
+# 📜 License
+
+MIT License
