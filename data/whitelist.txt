@@ -1,0 +1,14 @@
+google.com
+github.com
+microsoft.com
+windowsupdate.com
+cloudflare.com
+azure.com
+office.com
+live.com
+bing.com
+youtube.com
+windowsupdate.com
+gstatic.com
+googleapis.com
+amazonaws.com
