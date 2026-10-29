@@ -440,8 +440,6 @@ Only use it on networks that you own or have permission to monitor.
 
 **Yogesh Joshi**
 
-Cybersecurity Enthusiast
-
 SOC Analyst | Blue Team | Python | Network Security
 
 GitHub: https://github.com/0xjoshi
